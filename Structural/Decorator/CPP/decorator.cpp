@@ -17,6 +17,8 @@ public:
     Widget(const std::string& widgetName)
         : widgetName(widgetName) {
     }
+    virtual ~Widget() {
+    }
     virtual void draw() = 0;
 };
 
@@ -28,6 +30,8 @@ public:
     Window(const std::string& name, int height, int width)
         : Widget(name), height(height), width(width) {
     }
+    ~Window() {
+    }
     virtual void draw() {
         std::cout << "Rendering the Window: " << name() 
             << " with height: " << height << ", width: " << width << std::endl;
@@ -35,55 +39,56 @@ public:
 };
 
 // Below class is a decorator or wrapper
-class WidgetWrapper : public Widget {
+class WidgetDecorator : public Widget {
     // Here we store the reference
-    Widget& widget;
+    Widget& decoratedWidget;
 public:
     // Constructor
-    WidgetWrapper(Widget& widget)
-        : Widget("Widget Wrapper"), widget(widget) {
+    WidgetDecorator(const std::string& widgetName, Widget& widget)
+        : Widget(widgetName), decoratedWidget(widget) {
+    }
+    virtual ~WidgetDecorator() {
     }
 
     // Call our wrapper object's function
     virtual void draw() {
-        widget.draw();
+        decoratedWidget.draw();
     }
-
 };
 
-class Menubar : public Widget {
-    Widget& wrappedWidget;
-
+class Menubar : public WidgetDecorator {
     void drawMenuBar() {
         std::cout << "Drawing the Menu bar: " << name() << std::endl;
     }
 public:
-    Menubar(const std::string& name, Widget& wrappedWidget)
-        : Widget(name), wrappedWidget(wrappedWidget) {
-
+    Menubar(const std::string& menuBarName, Widget& decoratedWidget)
+        : WidgetDecorator(menuBarName, decoratedWidget) {
     }
+    ~Menubar() {
+    }
+
     virtual void draw() {
         // Draw Wrapped Widget first as it is in the background
-        wrappedWidget.draw();
+        WidgetDecorator::draw();
         // Now draw the actual menu bar
         drawMenuBar();
     }
 };
 
-class Statusbar : public Widget {
-    Widget& wrappedWidget;
-
+class Statusbar : public WidgetDecorator {
     void drawStatusbar() {
         std::cout << "Drawing the Status bar: " << name() << std::endl;
     }
 public:
-    Statusbar(const std::string& name, Widget& wrappedWidget)
-        : Widget(name), wrappedWidget(wrappedWidget) {
-
+    Statusbar(const std::string& statusBarName, Widget& decoratedWidget)
+        : WidgetDecorator(statusBarName, decoratedWidget) {
     }
+    ~Statusbar() {
+    }
+
     virtual void draw() {
         // Draw Wrapped Widget first as it is in the background
-        wrappedWidget.draw();
+        WidgetDecorator::draw();
 
         // Now draw the actual menu bar
         drawStatusbar();
@@ -93,14 +98,15 @@ public:
 int main(int argc, char **argv)
 {
     // Draw a simple Window
-    Window window("simple window", 1024, 768);
-    window.draw();
+    Window simpleWindow("simple window", 1024, 768);
+    simpleWindow.draw();
 
-    // Draw a Window with Menubar
-    Menubar menu("Main Menu", Window("Main Window", 1024, 768));
+    // Now we will create another Window but this time, decorate it with
+    // the Menubar
+    Window windowWithMenubar("Window with Menubar", 1024, 768);
+    // Now lets add menubar to the Window
+    Menubar menu("Main Menu", windowWithMenubar);
     menu.draw();
-
-
 
     return 0;
 }

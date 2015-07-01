@@ -8,10 +8,17 @@
 
 // Window is the abstract base for all concrete Window implementations
 class Window {
+    std::string windowName;
 public:
+    Window(const std::string& windowName)
+        : windowName(windowName) {
+    }
     Window() {
     }
     virtual ~Window() {
+    }
+    virtual std::string name() {
+        return windowName;
     }
     virtual void draw() = 0;
 };
@@ -20,38 +27,33 @@ public:
 class MainWindow : public Window {
     int height;
     int width;
-    std::string windowName;
 public:
-    MainWindow(const std::string& name, int height, int width)
-        : height(height), width(width), windowName(name) {
+    MainWindow(const std::string& windowName, int height, int width)
+        : Window(windowName), height(height), width(width) {
     }
     ~MainWindow() {
     }
-    
-    std::string name() {
-        return windowName;
-    }
 
     virtual void draw() {
-        std::cout << "Rendering the MainWindow: " << name() 
-            << " with height: " << height << ", width: " << width << std::endl;
+        std::cout << "Rendering the MainWindow: [" << name() 
+            << "] with height: " << height << ", width: " << width << std::endl;
     }
 };
 
-// SimpleWindow does not have any name
-class SimpleWindow : public Window {
-    int height;
-    int width;
+// SquareWindow have same height & width
+class SquareWindow : public Window {
+    int dimension;
+
 public:
-    SimpleWindow(int height, int width)
-        : height(height), width(width) {
+    SquareWindow(const std::string& windowName, int dimension)
+        : Window(windowName), dimension(dimension) {
     }
-    ~SimpleWindow() {
+    ~SquareWindow() {
     }
 
     virtual void draw() {
-        std::cout << "Rendering the SimpleWindow: "
-            << " with height: " << height << ", width: " << width << std::endl;
+        std::cout << "Rendering the SquareWindow: [" << name()
+            << "] with dimensions: " << dimension << std::endl;
     }
 };
 
@@ -68,6 +70,11 @@ public:
     }
 
     // Call our wrapper object's function
+    virtual std::string name() {
+        return decoratedWindow.name();
+    }
+
+    // Call our wrapper object's function
     virtual void draw() {
         decoratedWindow.draw();
     }
@@ -75,13 +82,18 @@ public:
 
 class MenubarDecorator : public WindowDecorator {
     void drawMenuBar() {
-        std::cout << "Drawing the Menu bar. " << std::endl;
+        std::cout << "Drawing the Menu bar for [" 
+            << WindowDecorator::name() << "]" << std::endl;
     }
 public:
     MenubarDecorator(Window& decoratedWindow)
         : WindowDecorator(decoratedWindow) {
     }
     ~MenubarDecorator() {
+    }
+
+    virtual std::string name() {
+        return WindowDecorator::name();
     }
 
     virtual void draw() {
@@ -94,13 +106,18 @@ public:
 
 class StatusbarDecorator : public WindowDecorator {
     void drawStatusbar() {
-        std::cout << "Drawing the Status bar." << std::endl;
+        std::cout << "Drawing the Status bar for [" 
+            << WindowDecorator::name() << "]" << std::endl;
     }
 public:
     StatusbarDecorator(Window& decoratedWindow)
         : WindowDecorator(decoratedWindow) {
     }
     ~StatusbarDecorator() {
+    }
+
+    virtual std::string name() {
+        return WindowDecorator::name();
     }
 
     virtual void draw() {
@@ -115,7 +132,7 @@ public:
 int main(int argc, char **argv)
 {
     // Draw a MainWindow
-    MainWindow mainWindow("simple window", 1024, 768);
+    MainWindow mainWindow("Main window", 1024, 768);
     mainWindow.draw();
 
     // Now for the same MainWindow we can add the menubar
@@ -127,13 +144,13 @@ int main(int argc, char **argv)
     StatusbarDecorator windowWithMenubarAndStatusBar(windowWithMenubar);
     windowWithMenubarAndStatusBar.draw();
 
-    // Draw a simpleWindow
-    SimpleWindow simpleWindow(1024, 768);
-    simpleWindow.draw();
+    // Draw a squareWindow
+    SquareWindow squareWindow("Square Window", 1024);
+    squareWindow.draw();
 
-    // Now lets decorate SimpleWindow with Menubar
-    MenubarDecorator simpleWindowWithMenubar(simpleWindow);
-    simpleWindowWithMenubar.draw();
+    // Now lets decorate SquareWindow with Menubar
+    MenubarDecorator squareWindowWithMenubar(squareWindow);
+    squareWindowWithMenubar.draw();
 
     return 0;
 }
